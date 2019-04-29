@@ -59,10 +59,20 @@ if __name__ == '__main__':
 
     env.reset()
     env.render()
+    state_size = env.observation_space.shape[0]
+    action_size = env.action_space.n
+    agent = DQN(state_size, action_size)
 
     done = False
     moves = 0
-    while not done:
+
+    for ep in range(1000):
+        state = env.reset()
+        state = np.reshape(state, [1, state_size])
+        for t in range(500):
+            action = agent.action(state)
+
+        #under this is taken from open ai
         action = env.np_random.choice(range(4), 1).item()
         next_state, reward, done, info = env.step(action)
         moves += 1

@@ -1,10 +1,10 @@
 import torch
 import gym
-import gym-2048
+import gym_2048
 """
 Implements the neural network for PPO.
 """
-class PPOModel(torch.nn.Module):
+class DQNModel(torch.nn.Module):
     def __init__():
         pass
 
