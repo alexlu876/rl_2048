@@ -50,10 +50,13 @@ class DQNModel(nn.Module):
         self.fc4 = nn.Linear(64, num_actions)
 
     def forward(self, x):
+        x = torch.tensor(x)
         x = F.relu(self.fc1(x))
+        print(type(x))
         x = F.relu(self.fc2(x))
         x = F.relu(self.fc3(x))
-        return (self.fc4(x)).argmax(1)
+        print(self.fc4(x).type)
+        return (self.fc4(x))
 
 class DQN:
     def __init__(self, state_size, action_size):
@@ -66,7 +69,7 @@ class DQN:
         self.min_exploration = 0.01
         self.lr = 0.01
         self.model = self.build(state_size, action_size)
-        #self.optimizer = torch.optim.SGD(self.model.params, lr=self.lr)
+        self.optimizer = torch.optim.SGD(self.model.parameters(), lr=self.lr)
     
     def build(self, state_size, action_size):
         '''
@@ -74,11 +77,9 @@ class DQN:
                               nn.ReLU(),
                               nn.Linear(12, 12),
                               nn.ReLU(),
-                              nn.Linear(12, output_size),
-                              nn.ReLU())
+                              nn.Linear(12, output_size))
         '''
         model = DQNModel(state_size, action_size)
-        model = Model(model, 'sgd', 'cross_entropy', metrics=['accuracy'])
         return model
     
     def action(self, state):
@@ -97,22 +98,24 @@ class DQN:
         for state, action, reward, next_state, done in minibatch:
             target = reward
             if not done:
+                '''
                 print(next_state.strides)
                 torch.from_numpy(np.flip(next_state,axis=1).copy())
                 print(reward)
                 print(self.discount)
-                target = (reward + self.discount * np.amax(self.model.predict(next_state)))#[0]))
-            target_f = self.model.predict(state)
+                '''
+                target = (reward + self.discount * torch.max(self.model.forward(next_state)))#[0]))
+            target_f = self.model.forward(state)
             target_f[0][action] = target 
             # Filtering out states and targets for training
             states.append(state[0])
             targets_f.append(target_f[0])
         history = self.model.fit(np.array(states), np.array(targets_f), epochs=1, verbose=False)
         # Keeping track of loss
-        loss = history[0]['loss']
+        #loss = history[0]['loss']
         if self.epsilon > self.epsilon_min:
             self.epsilon *= self.epsilon_decay
-        return loss
+        return 0 #loss
         
 
 
@@ -126,6 +129,7 @@ if __name__ == '__main__':
     action_size = env.action_space.n
     agent = DQN(state_size, action_size)
     batch_size = 32
+    print(agent.model.parameters())
 
     done = False
     moves = 0
